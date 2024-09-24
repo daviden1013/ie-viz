@@ -1,0 +1,1 @@
+A simple visualization tool for NLP information extraction: Named entity recognition, Entity attribute extraction, and Relation extration.

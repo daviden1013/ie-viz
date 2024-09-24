@@ -1,0 +1,10 @@
+{
+    "light_theme_colors": [
+        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+    ],
+    "dark_theme_colors": [
+        "#FF5722", "#4CAF50", "#2196F3", "#FFEB3B", "#9C27B0", 
+        "#03A9F4", "#FFC107", "#FF4081", "#8BC34A", "#FF9800"
+    ]
+}
