@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ie-vis"
+name = "ie-viz"
 version = "0.0.1"
 description = "A simple visualization tool for NLP information extraction: Named entity recognition, Entity attribute extraction, and Relation extration."
 authors = ["Enshuo (David) Hsu"]

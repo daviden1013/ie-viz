@@ -60,7 +60,8 @@ function updateEntities(text, entities) {
         }
         entityElement.addEventListener('mouseenter', function(event) {
             if (ent.attr) {
-                showTooltip(event, `Entity ID: ${ent.entity_id}<br>Text: ${entityText}<br>Attributes: ${JSON.stringify(ent.attr, null, 2)}`);
+                const prettyAttributes = JSON.stringify(ent.attr, null, 2).replace(/\n/g, '<br>').replace(/  /g, '&nbsp;&nbsp;');
+                showTooltip(event, `Entity ID: ${ent.entity_id}<br>Text: ${entityText}<br>Attributes: ${prettyAttributes}`);
             }
             else {
                 showTooltip(event, `Entity ID: ${ent.entity_id}<br>Text: ${entityText}`);
