@@ -127,22 +127,22 @@ def serve(text: str,
     
     # Check entities type is List[Dict[str, str]]
     if not isinstance(entities, Iterable):
-        raise TypeError("entities must be an List or Iterable.")
+        raise TypeError("entities must be a List or Iterable.")
     for entity in entities:
         if not isinstance(entity, Dict):
             raise TypeError("entities must be a list of dictionaries.")
         if not all(key in entity for key in ['entity_id', 'start', 'end']):
-            raise ValueError("entities must have the keys 'entity_id', 'start', 'end'.")
+            raise ValueError("entity dictionary must have the keys 'entity_id', 'start', 'end'.")
 
     # Check relations type is List[Dict[str, str]]
     if relations:
         if not isinstance(relations, Iterable):
-            raise TypeError("relations must be an List or Iterable.")
+            raise TypeError("relations must be a List or Iterable.")
         for relation in relations:
             if not isinstance(relation, Dict):
                 raise TypeError("relations must be a list of dictionaries.")
             if not all(key in relation for key in ['entity_1_id', 'entity_2_id']):
-                raise ValueError("relations must have the keys 'entity_1_id', 'entity_2_id'.")
+                raise ValueError("relation dictionary must have the keys 'entity_1_id', 'entity_2_id'.")
             
     # Check theme is either "light" or "dark"
     if theme not in {'light', 'dark'}:
