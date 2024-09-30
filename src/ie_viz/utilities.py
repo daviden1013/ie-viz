@@ -254,16 +254,18 @@ def serve(text: str,
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         if s.connect_ex((host, port)) == 0:
             raise ValueError(f"port {port} is already in use.")
-        
-    @app.route('/')
-    def render_page():
-        # Generate the HTML content by calling the `render()` function
-        return render(text=text, 
-                      entities=entities, 
-                      relations=relations, 
-                      theme=theme,
-                      color_attr_key=color_attr_key,
-                      color_map_func=color_map_func)
+
+    print(app.url_map.iter_rules())
+    # Render page
+    if not app.view_functions.get('render_page'):
+        @app.route('/')
+        def render_page():
+            return render(text=text, 
+                            entities=entities, 
+                            relations=relations, 
+                            theme=theme,
+                            color_attr_key=color_attr_key,
+                            color_map_func=color_map_func)
 
     # Run the Flask app with SocketIO
     socketio.run(app, host=host, port=port, allow_unsafe_werkzeug=True)
