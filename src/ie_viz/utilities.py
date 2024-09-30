@@ -4,6 +4,8 @@ from typing import List, Dict, Iterable, Callable
 from flask import Flask, render_template_string, url_for
 from flask_socketio import SocketIO, emit
 import re
+import copy
+
 
 """ Flask app """
 app = Flask(__name__)
@@ -107,6 +109,7 @@ def render(text: str,
         if not callable(color_map_func):
             raise TypeError("color_map_func must be a callable.")
         
+        entities = copy.deepcopy(entities)
         for entity in entities:
             hex_color = color_map_func(entity)
             # Check color_map_func returns a string for hex color code
@@ -115,7 +118,7 @@ def render(text: str,
             
             hex_pattern = r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
             if not bool(re.match(hex_pattern, hex_color)):
-                raise ValueError(f"color_map_func must return a string for hex color code, received {hex_color} instead.")
+                raise ValueError(f'color_map_func must return a string for hex color code, received "{hex_color}" instead.')
             
             entity['color'] = hex_color
 
@@ -125,9 +128,10 @@ def render(text: str,
             raise TypeError("color_attr_key must be a string.")
         
         # Check color_attr_key is in entity attributes
+        entities = copy.deepcopy(entities)
         for entity in entities:
             if color_attr_key not in entity['attr']:
-                raise ValueError(f"color_attr_key {color_attr_key} not found in entity attributes.")
+                raise ValueError(f'color_attr_key "{color_attr_key}" not found in entity attributes.')
         
         # Get unique attribute values
         theme_colors = load_theme_colors(theme)
@@ -137,14 +141,6 @@ def render(text: str,
         # Apply colors to entities
         for entity in entities:
             entity['color'] = attr_color_map[entity['attr'][color_attr_key]]
-
-
-    # Set app configuration
-    app.config['text'] = text
-    app.config['entities'] = entities
-    app.config['theme'] = theme
-    if relations:
-        app.config['relations'] = relations
 
     # Read and embed the CSS and JS files directly into the HTML content.
     css_file_path = os.path.join(app.static_folder, 'style.css')
@@ -156,18 +152,18 @@ def render(text: str,
     with open(js_file_path, 'r') as js_file:
         js_content = js_file.read()
 
-    # Extract the data from app config
+    # Package data into JSON
     data = {
-        'text': app.config.get('text', ''),
-        'entities': app.config.get('entities', []),
-        'theme': app.config.get('theme', 'light')
+        'text': text,
+        'entities': entities,
+        'theme': theme
     }
-    if 'relations' in app.config:
-        data['relations'] = app.config['relations']
+    if relations:
+        data['relations'] = relations
 
-    # Convert the data to JSON to be embedded in the HTML
     data_json = json.dumps(data)
 
+    # Render the HTML content
     html_content = f"""
     <html>
     <head>
@@ -255,17 +251,19 @@ def serve(text: str,
         if s.connect_ex((host, port)) == 0:
             raise ValueError(f"port {port} is already in use.")
 
-    print(app.url_map.iter_rules())
+   # Remove the existing route if defined
+    if 'render_page' in app.view_functions:
+        app.view_functions.pop('render_page')
+
     # Render page
-    if not app.view_functions.get('render_page'):
-        @app.route('/')
-        def render_page():
-            return render(text=text, 
-                            entities=entities, 
-                            relations=relations, 
-                            theme=theme,
-                            color_attr_key=color_attr_key,
-                            color_map_func=color_map_func)
+    @app.route('/')
+    def render_page():
+        return render(text=text, 
+                        entities=entities, 
+                        relations=relations, 
+                        theme=theme,
+                        color_attr_key=color_attr_key,
+                        color_map_func=color_map_func)
 
     # Run the Flask app with SocketIO
     socketio.run(app, host=host, port=port, allow_unsafe_werkzeug=True)
