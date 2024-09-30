@@ -219,33 +219,27 @@ const checkElement = async selector => {
     return document.getElementById(selector);
 };
 
-// Define socket connection
-var socket = io();
+updateEntities(data.text, data.entities);
 
-// Receive text, entities, and relations from the server
-socket.on('receive_text', function(data) {
-    updateEntities(data.text, data.entities);
-
-    if ('theme' in data) {
-        if (data.theme === 'dark') {
-            document.body.className = '';
-            document.body.classList.add('dark-theme');
-        }
+if ('theme' in data) {
+    if (data.theme === 'dark') {
+        document.body.className = '';
+        document.body.classList.add('dark-theme');
     }
+}
 
-    if ('relations' in data) {
-        relations = data.relations;
-        alineDisplayRelation(svgPaddingSize);
+if ('relations' in data) {
+    relations = data.relations;
+    alineDisplayRelation(svgPaddingSize);
+    updateRelations(relations, relationPathLevel, svgPaddingSize);
+
+    // Add event listener for the main page scroll
+    window.addEventListener('scroll', () => {
         updateRelations(relations, relationPathLevel, svgPaddingSize);
+    });
 
-        // Add event listener for the main page scroll
-        window.addEventListener('scroll', () => {
-            updateRelations(relations, relationPathLevel, svgPaddingSize);
-        });
-
-        // Add event listener for the main page resize
-        window.addEventListener('resize', () => {
-            updateRelations(relations, relationPathLevel, svgPaddingSize);
-        });
-    }
-});
+    // Add event listener for the main page resize
+    window.addEventListener('resize', () => {
+        updateRelations(relations, relationPathLevel, svgPaddingSize);
+    });
+}

@@ -9,47 +9,6 @@ import re
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-@socketio.on('connect')
-def handle_connect():
-    data = {
-        'text': app.config['text'],
-        'entities': app.config['entities'],
-        'theme': app.config['theme']
-    }
-    if 'relations' in app.config:
-        data['relations'] = app.config['relations']
-
-    emit('receive_text', data)
-
-
-@app.route('/')
-def render():
-    """
-    Generates the HTML content for the Named Entity Visualization.
-
-    Returns:
-    --------
-    str
-        The HTML content as a string.
-    """
-    html_content = f"""
-    <html>
-    <head>
-        <title>Named Entity Visualization</title>
-        <link rel="stylesheet" type="text/css" href="{url_for('static', filename='style.css')}">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-        <script type="text/javascript" charset="utf-8" src="{url_for('static', filename='script.js')}"></script>
-    </head>
-    <body>
-        <div id="display-textbox-container">
-            <div id="display-textbox"></div>
-            <svg id="display-relation"></svg>
-        </div>
-    </body>
-    </html>
-    """
-    return render_template_string(html_content)
-
 
 def load_theme_colors(theme):
     with open(os.path.join(app.static_folder, 'color_code.json'), 'r') as f:
@@ -82,11 +41,9 @@ def get_attr_color_map(unique_attr:List, theme_colors:List[str]) -> Dict[str, st
     return color_map
     
 
-def serve(text: str,
+def render(text: str,
           entities: List[Dict[str, str]],
           relations: List[Dict[str, str]]=None,
-          host: str = '0.0.0.0', 
-          port: int = 3000,
           theme:str = "light",
           color_attr_key:str=None,
           color_map_func:Callable=None
@@ -109,10 +66,6 @@ def serve(text: str,
         The list of relations to be displayed. Must be a list of dictionaries with the following keys:
             - entity_1_id: str
             - entity_2_id: str
-    host : str, Optional
-        The host IP address to serve the app.
-    port : int, Optional
-        The port number to serve the app.
     theme : str, Optional
         The theme of the visualization. Must be either "light" or "dark".
     color_attr_key : str, Optional
@@ -147,16 +100,6 @@ def serve(text: str,
     # Check theme is either "light" or "dark"
     if theme not in {'light', 'dark'}:
         raise ValueError("theme must be either 'light' or 'dark'.")
-                         
-    # Check host is a string following the format of an IP address
-    if not isinstance(host, str):
-        raise TypeError("host must be a string.")
-    if not all(part.isdigit() and 0 <= int(part) <= 255 for part in host.split('.')):
-        raise ValueError("host must be a valid IP address.")
-
-    # Check port is an integer
-    if not isinstance(port, int):
-        raise TypeError("port must be an integer.")
     
     # Assign eneity colors
     if color_map_func:
@@ -203,6 +146,124 @@ def serve(text: str,
     if relations:
         app.config['relations'] = relations
 
-    # Run the app
-    socketio.run(app, host=host, port=port, allow_unsafe_werkzeug=True)
+    # Read and embed the CSS and JS files directly into the HTML content.
+    css_file_path = os.path.join(app.static_folder, 'style.css')
+    js_file_path = os.path.join(app.static_folder, 'script.js')
 
+    with open(css_file_path, 'r') as css_file:
+        css_content = css_file.read()
+    
+    with open(js_file_path, 'r') as js_file:
+        js_content = js_file.read()
+
+    # Extract the data from app config
+    data = {
+        'text': app.config.get('text', ''),
+        'entities': app.config.get('entities', []),
+        'theme': app.config.get('theme', 'light')
+    }
+    if 'relations' in app.config:
+        data['relations'] = app.config['relations']
+
+    # Convert the data to JSON to be embedded in the HTML
+    data_json = json.dumps(data)
+
+    html_content = f"""
+    <html>
+    <head>
+        <title>Named Entity Visualization</title>
+        <style>
+        {css_content}
+        </style>
+    </head>
+    <body>
+        <div id="display-textbox-container">
+            <div id="display-textbox"></div>
+            <svg id="display-relation"></svg>
+        </div>
+        <script type="text/javascript">
+            // Embed the data as JavaScript variables
+            const data = {data_json};
+            
+            // Original JavaScript logic
+            {js_content}
+
+        </script>
+    </body>
+    </html>
+    """
+    return html_content
+
+
+def serve(text: str,
+          entities: List[Dict[str, str]],
+          relations: List[Dict[str, str]]=None,
+          theme:str = "light",
+          color_attr_key:str=None,
+          color_map_func:Callable=None,
+          host:str="0.0.0.0",
+          port:int=5000
+          ):
+    """
+    This function serves the information extracton visualization App.
+
+    Parameters:
+    -----------
+    text : str
+        The text content to be displayed.
+    entities : List[Dict[str, str]]
+        The list of entities to be displayed. Must be a list of dictionaries with the following keys:
+            - entity_id: str
+            - start: int
+            - end: int
+            - attr: Dict[str, str], Optional
+                The attributes of the entity. 
+    relations : List[Dict[str, str]], Optional
+        The list of relations to be displayed. Must be a list of dictionaries with the following keys:
+            - entity_1_id: str
+            - entity_2_id: str
+    theme : str, Optional
+        The theme of the visualization. Must be either "light" or "dark".
+    color_attr_key : str, Optional
+        The attribute key to be used for coloring the entities.
+    color_map_func : Callable, Optional
+        The function to be used for mapping the entity attributes to colors. When provided, the color_attr_key and 
+        theme will be overwritten. The function must take an entity dictionary as input and return a color string (hex).
+    host : str, Optional
+        The host address to run the server on.
+    port : int, Optional
+        The port number to run the server on.
+    """
+    # Check host is a string following the format of an IP address
+    if not isinstance(host, str):
+        raise TypeError("host must be a string.")
+    if not all(part.isdigit() and 0 <= int(part) <= 255 for part in host.split('.')):
+        if host != "localhost":
+            raise ValueError("host must be a valid IP address.")
+
+    # Check port is an integer
+    if not isinstance(port, int):
+        raise TypeError("port must be an integer.")
+    
+    # Check port is within the valid range
+    if not 0 <= port <= 65535:
+        raise ValueError("port must be between 0 and 65535.")
+    
+    # Check port is not in use
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        if s.connect_ex((host, port)) == 0:
+            raise ValueError(f"port {port} is already in use.")
+        
+    @app.route('/')
+    def render_page():
+        # Generate the HTML content by calling the `render()` function
+        return render(text=text, 
+                      entities=entities, 
+                      relations=relations, 
+                      theme=theme,
+                      color_attr_key=color_attr_key,
+                      color_map_func=color_map_func)
+
+    # Run the Flask app with SocketIO
+    socketio.run(app, host=host, port=port, allow_unsafe_werkzeug=True)
