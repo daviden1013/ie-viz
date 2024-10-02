@@ -38,7 +38,7 @@ def get_attr_color_map(unique_attr:List, theme_colors:List[str]) -> Dict[str, st
         The color map for the attributes of the entity.
     """
     color_map = {}
-    for i, attr in enumerate(unique_attr):
+    for i, attr in sorted(enumerate(unique_attr)):
         color_map[attr] = theme_colors[i % len(theme_colors)]
     return color_map
     
