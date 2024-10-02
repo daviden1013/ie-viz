@@ -163,11 +163,21 @@ function updateRelations(relations, r, svg_padding_size) {
         const entity1Rect = entity1Element.getBoundingClientRect();
         const entity2Rect = entity2Element.getBoundingClientRect();
 
+        // Get the computed style of the entity elements to determine the line height
+        const entity1Style = window.getComputedStyle(entity1Element);
+        const entity2Style = window.getComputedStyle(entity2Element);
+        const entity1LineHeight = parseFloat(entity1Style.lineHeight);
+        const entity2LineHeight = parseFloat(entity2Style.lineHeight);
+
+        // Calculate the number of lines
+        const entity1Lines = entity1Rect.height / entity1LineHeight;
+        const entity2Lines = entity2Rect.height / entity2LineHeight;
+
         // Handle line-broken entity
         // When an entity is split by line change, we use the top-left as StartX
-        const entity1X = entity1Element.textContent.includes("\\n") ? entity1Rect.right - textDivRect.left + svg_padding_size: entity1Rect.left + entity1Rect.width / 2 - textDivRect.left + svg_padding_size;
+        const entity1X = entity1Lines > 2 ? entity1Rect.right - textDivRect.left + svg_padding_size : entity1Rect.left + entity1Rect.width / 2 - textDivRect.left + svg_padding_size;
         const entity1Y = entity1Rect.top - textDivRect.top + svg_padding_size;
-        const entity2X = entity2Element.textContent.includes("\\n") ? entity2Rect.left - textDivRect.left + svg_padding_size: entity2Rect.left + entity2Rect.width / 2 - textDivRect.left + svg_padding_size;
+        const entity2X = entity2Lines > 2 ? entity2Rect.right - textDivRect.left + svg_padding_size : entity2Rect.left + entity2Rect.width / 2 - textDivRect.left + svg_padding_size;
         const entity2Y = entity2Rect.top - textDivRect.top + svg_padding_size;
 
         // start with entity on left
