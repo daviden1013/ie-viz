@@ -101,6 +101,10 @@ function showTooltip(event, content) {
     tooltip.innerHTML = content;
     document.body.appendChild(tooltip); 
 
+    // Limit the tooltip width to 1/3 of the screen width
+    var maxWidth = window.innerWidth / 3;
+    tooltip.style.maxWidth = maxWidth + "px";
+    
     // Position the tooltip
     var rect = event.target.getBoundingClientRect();
     var x = rect.left + window.scrollX;

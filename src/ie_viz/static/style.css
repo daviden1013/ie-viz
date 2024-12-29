@@ -38,13 +38,16 @@ body {
 }
 
 .custom-tooltip {
+    word-wrap: break-word; /* Ensures long words break into the next line */
+    overflow-wrap: break-word; /* Ensures content stays within bounds */
+    box-sizing: border-box; /* Ensures padding/borders don't affect width calculations */
     position: absolute;
     background-color: var(--tooltip-background-color);
     color: #fff;
     padding: 8px; /* Slightly larger padding */
     border-radius: 8px; /* More rounded corners */
     z-index: 3;
-    white-space: nowrap;
+    white-space: normal;
     pointer-events: none;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
     transition: opacity 0.3s ease; /* Smooth transition for opacity */
