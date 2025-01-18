@@ -55,21 +55,27 @@ body {
 }
 
 #display-textbox {
-    width: 95%;
+    width: 100%;
     z-index: 1;
-    word-wrap: break-word; /* Break long words */
-    overflow-wrap: break-word; /* Ensure long words wrap */
-    white-space: normal; /* Allow normal word wrapping */
-    overflow-y: auto; /* Enable vertical scrolling if needed */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
     position: absolute;
     line-height: 1.5;
+    padding: 1rem;
+    
+    /* Hide horizontal scrollbar and only show vertical when needed */
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 #display-relation {
-    width: 95%;
+    width: 100%;
     position: absolute;
     z-index: 2;
     pointer-events: none; /* Make the SVG non-interactive */
+    top: 0; 
+    left: 0; 
 }
 
 .relation-path {
@@ -80,6 +86,7 @@ body {
 }
 
 #display-textbox-container {
-    width: 100%;
-    height: 100%;
+    width: 95%;
+    height: 95%;
+    position: absolute;
 }

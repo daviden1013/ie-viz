@@ -12,7 +12,11 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 
-def load_theme_colors(theme):
+def load_theme_colors(theme:str) -> List[Dict[str, str]]:
+    """
+    This function loads the color codes for the light and dark themes.
+    The return is a list of dicts with "color_name" and "color_code" keys.
+    """
     with open(os.path.join(app.static_folder, 'color_code.json'), 'r') as f:
         data = json.load(f)
     if theme == 'light':
@@ -39,7 +43,7 @@ def get_attr_color_map(unique_attr:List, theme_colors:List[str]) -> Dict[str, st
     """
     color_map = {}
     for i, attr in sorted(enumerate(unique_attr)):
-        color_map[attr] = theme_colors[i % len(theme_colors)]
+        color_map[attr] = theme_colors[i % len(theme_colors)]["color_code"]
     return color_map
     
 
@@ -74,7 +78,8 @@ def render(text: str,
         The attribute key to be used for coloring the entities.
     color_map_func : Callable, Optional
         The function to be used for mapping the entity attributes to colors. When provided, the color_attr_key and 
-        theme will be overwritten. The function must take an entity dictionary as input and return a color string (hex).
+        theme will be overwritten. The function must take an entity dictionary as input and 
+        return a color string (default color name or hex color code).
     """
     # Check text type is str
     if not isinstance(text, str):
@@ -111,17 +116,22 @@ def render(text: str,
         
         entities = copy.deepcopy(entities)
         for entity in entities:
-            hex_color = color_map_func(entity)
-            # Check color_map_func returns a string for hex color code
-            if not isinstance(hex_color, str):
+            color = color_map_func(entity)
+            # Check color_map_func returns a string
+            if not isinstance(color, str):
                 raise TypeError("color_map_func must return a string.")
             
+            # Check color_map_func returns a valid hex color code or one of the predefined colors
             hex_pattern = r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-            if not bool(re.match(hex_pattern, hex_color)):
-                raise ValueError(f'color_map_func must return a string for hex color code, received "{hex_color}" instead.')
-            
-            entity['color'] = hex_color
-
+            default_color_names = {c["color_name"]: c["color_code"] for c in load_theme_colors("light") + load_theme_colors("dark")}
+            if color in default_color_names: 
+                entity['color'] = default_color_names[color]
+            elif bool(re.match(hex_pattern, color)):
+                entity['color'] = color
+            else:
+                raise ValueError(f'color_map_func must return a string of default color name ({list(default_color_names.keys())})'\
+                                 f' or a hex color code, received "{color}" instead.')
+        
     elif color_attr_key:
         # Check color_attr_key is a string
         if not isinstance(color_attr_key, str):

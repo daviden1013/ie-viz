@@ -1,15 +1,14 @@
-function alineDisplayRelation(svg_padding_size) {
+function alineDisplayRelation() {
     // Get the display-textbox (div) and display-relation (svg) elements
     const textDiv = document.getElementById("display-textbox");
     const svgContainer = document.getElementById("display-relation");
     // Get dimensions of the display-textbox
     const textDivRect = textDiv.getBoundingClientRect();
     // Set dimensions of the SVG container
-    svgContainer.style.top = (textDivRect.top - svg_padding_size) + 'px';
-    svgContainer.style.left = (textDivRect.left - svg_padding_size) + 'px';
-    svgContainer.style.height = (textDivRect.height + 2*svg_padding_size) + 'px';
-    svgContainer.style.width = (textDivRect.width + 2*svg_padding_size) + 'px';
+    svgContainer.style.height = (textDivRect.height) + 'px';
+    svgContainer.style.width = (textDivRect.width) + 'px';
 }
+
 
 function updateEntities(text, entities) {
     // Clear current display textbox
@@ -108,8 +107,8 @@ function showTooltip(event, content) {
     // Position the tooltip
     var rect = event.target.getBoundingClientRect();
     var x = rect.left + window.scrollX;
-    // 15px above the entity
-    var y = rect.top + window.scrollY - tooltip.offsetHeight - 15; 
+    // 5px above the entity
+    var y = rect.top + window.scrollY - tooltip.offsetHeight - 5; 
 
     // Ensure the tooltip doesn't go off-screen
     if (x + tooltip.offsetWidth > window.innerWidth) {
@@ -132,7 +131,7 @@ function hideTooltip() {
     }
 }
 
-function updateRelations(relations, r, svg_padding_size) {
+function updateRelations(relations, r) {
     /* 
     * Update the relation lines between entities 
     *
@@ -140,7 +139,6 @@ function updateRelations(relations, r, svg_padding_size) {
     * r: level size for the relation paths
     * svg_padding_size: padding size for the svg container
     */
-
     // If no relations
     if (!relations || relations.length === 0) {
         return null;
@@ -179,10 +177,18 @@ function updateRelations(relations, r, svg_padding_size) {
 
         // Handle line-broken entity
         // When an entity is split by line change, we use the top-left as StartX
-        const entity1X = entity1Lines > 2 ? entity1Rect.right - textDivRect.left + svg_padding_size : entity1Rect.left + entity1Rect.width / 2 - textDivRect.left + svg_padding_size;
-        const entity1Y = entity1Rect.top - textDivRect.top + svg_padding_size;
-        const entity2X = entity2Lines > 2 ? entity2Rect.right - textDivRect.left + svg_padding_size : entity2Rect.left + entity2Rect.width / 2 - textDivRect.left + svg_padding_size;
-        const entity2Y = entity2Rect.top - textDivRect.top + svg_padding_size;
+        const entity1X = entity1Lines > 2 
+            ? (entity1Rect.right - textDivRect.left)
+            : (entity1Rect.left + entity1Rect.width / 2 - textDivRect.left);
+        
+        const entity1Y = entity1Rect.top - textDivRect.top;
+        
+        const entity2X = entity2Lines > 2 
+            ? (entity2Rect.right - textDivRect.left)
+            : (entity2Rect.left + entity2Rect.width / 2 - textDivRect.left);
+        
+        const entity2Y = entity2Rect.top - textDivRect.top;
+
 
         // start with entity on left
         var startX = null;
@@ -223,7 +229,6 @@ function updateRelations(relations, r, svg_padding_size) {
 // Global variables for relation lines
 let relations = null;
 let relationPathLevel = 5;
-let svgPaddingSize = 20;
 
 // This function wait until an element is rendered
 const checkElement = async selector => {
@@ -244,16 +249,16 @@ if ('theme' in data) {
 
 if ('relations' in data) {
     relations = data.relations;
-    alineDisplayRelation(svgPaddingSize);
-    updateRelations(relations, relationPathLevel, svgPaddingSize);
+    alineDisplayRelation();
+    updateRelations(relations, relationPathLevel);
 
     // Add event listener for the main page scroll
     window.addEventListener('scroll', () => {
-        updateRelations(relations, relationPathLevel, svgPaddingSize);
+        updateRelations(relations, relationPathLevel);
     });
 
     // Add event listener for the main page resize
     window.addEventListener('resize', () => {
-        updateRelations(relations, relationPathLevel, svgPaddingSize);
+        updateRelations(relations, relationPathLevel);
     });
 }

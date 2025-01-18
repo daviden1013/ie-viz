@@ -1,10 +1,26 @@
 {
     "light_theme_colors": [
-        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+        {"color_name": "blue", "color_code": "#1f77b4"},
+        {"color_name": "orange", "color_code": "#ff7f0e"},
+        {"color_name": "green", "color_code": "#2ca02c"},
+        {"color_name": "red", "color_code": "#d62728"},
+        {"color_name": "purple", "color_code": "#9467bd"},
+        {"color_name": "brown", "color_code": "#8c564b"},
+        {"color_name": "pink", "color_code": "#e377c2"},
+        {"color_name": "gray", "color_code": "#7f7f7f"},
+        {"color_name": "yellow-green", "color_code": "#bcbd22"},
+        {"color_name": "cyan", "color_code": "#17becf"}
     ],
     "dark_theme_colors": [
-        "#FF5722", "#4CAF50", "#2196F3", "#FFEB3B", "#9C27B0", 
-        "#03A9F4", "#FFC107", "#FF4081", "#8BC34A", "#FF9800"
+        {"color_name": "deep orange", "color_code": "#FF5722"},
+        {"color_name": "green", "color_code": "#4CAF50"},
+        {"color_name": "blue", "color_code": "#2196F3"},
+        {"color_name": "yellow", "color_code": "#FFEB3B"},
+        {"color_name": "purple", "color_code": "#9C27B0"},
+        {"color_name": "light blue", "color_code": "#03A9F4"},
+        {"color_name": "amber", "color_code": "#FFC107"},
+        {"color_name": "pink", "color_code": "#FF4081"},
+        {"color_name": "light green", "color_code": "#8BC34A"},
+        {"color_name": "orange", "color_code": "#FF9800"}
     ]
 }

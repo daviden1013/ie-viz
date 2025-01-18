@@ -72,7 +72,7 @@ relations = [
             ]
 ```
 
-The ```serve()``` function starts a Flask App that visualizes the entities, attributes, and relations. The ```theme``` parameter supports light and dark modes. The ```color_attr_key``` parameter specifies that entity color is based on entity "Type" attribute. 
+The `serve()` function starts a Flask App that visualizes the entities, attributes, and relations. The `theme` parameter supports light and dark modes. The `color_attr_key` parameter specifies that entity color is based on entity "Type" attribute. 
 ```python
 from ie_viz import serve
 
@@ -105,9 +105,9 @@ Below are Jupyter notebooks that demo some use cases:
 <details>
 <summary> Input formats </summary>
 
-Both the ```serve()``` and ```render()``` functions accept the same data types for input. 
+Both the `serve()` and `render()` functions accept the same data types for input. 
 
-The entities must be a list of dictionaries. Each dictionary must have ```entity_id```, ```start```, and ```end``` keys. The ```attr``` key is optional and can be used for entity attributes display or entity coloring. 
+The entities must be a list of dictionaries. Each dictionary must have `entity_id`, `start`, and `end` keys. The `attr` key is optional and can be used for entity attributes display or entity coloring. 
 ```python
 entities = [
             {'entity_id': '<entity id>', 'start': <start char>, 'end': <end char>}, 
@@ -116,7 +116,7 @@ entities = [
            ]
 ```
 
-The relations is optional. It must be a list of dictionaries with ```entity_1_id``` and ```entity_2_id``` keys. 
+The relations is optional. It must be a list of dictionaries with `entity_1_id` and `entity_2_id` keys. 
 ```python
 relations = [
              {'entity_1_id': '<entity id>', 'entity_2_id': '<entity id>'}, 
@@ -130,9 +130,9 @@ relations = [
 <details>
 <summary> Entity colors </summary>
 
-There are two parameters to customize the entity colors, ```color_attr_key``` or ```color_map_func```. If none of them are defined, a default color is assigned to all entities. 
+There are two parameters to customize the entity colors, `color_attr_key` or `color_map_func`. If none of them are defined, a default color is assigned to all entities. 
 
-The ```color_attr_key``` is a easier way to define entity color. It specifies an attribute key to be used. All entities with the same attribute value will be assigned the same color. 
+The `color_attr_key` is a easier way to define entity color. It specifies an attribute key to be used. All entities with the same attribute value will be assigned the same color. 
 
 ```python
 from ie_viz import serve
@@ -142,17 +142,17 @@ serve(text, entities, color_attr_key="<attribute key to assign color>")
 
 Note that all entities must have that attribute key, or an error will be raised.
 
-The ```color_map_func``` is a more flexible way to define colors. Users define a custom function that inputs an entity and returns a hex color code (as string). 
+The `color_map_func` is a more flexible way to define colors. Users define a custom function that inputs an entity and returns a default color name or a hex color code (as string). 
 
 ```python 
 def color_map_func(entity) -> str:
     if entity['attr']['<attribute key>'] == "<a certain value>":
-        return "#7f7f7f"
+        return "gray"
     else:
         return "#03A9F4"
 
 serve(text, entities, color_map_func=color_map_func)
 ```
-Note that the ```color_map_func``` has higher priority than ```color_attr_key```. 
+Note that the `color_map_func` has higher priority than `color_attr_key`. When provided, the `color_attr_key` will be overwritten.
 
 </details>
