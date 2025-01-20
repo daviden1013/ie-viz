@@ -108,7 +108,8 @@ def render(text: str,
     if theme not in {'light', 'dark'}:
         raise ValueError("theme must be either 'light' or 'dark'.")
     
-    # Assign eneity colors
+    # Assign entity colors
+    # If color_map_func is provided, use it to assign colors hex code (str) to entities
     if color_map_func:
         # Check color_map_func is a callable
         if not callable(color_map_func):
@@ -132,6 +133,7 @@ def render(text: str,
                 raise ValueError(f'color_map_func must return a string of default color name ({list(default_color_names.keys())})'\
                                  f' or a hex color code, received "{color}" instead.')
         
+    # If color_attr_key is provided, use it to assign colors index (int) to entities
     elif color_attr_key:
         # Check color_attr_key is a string
         if not isinstance(color_attr_key, str):
@@ -141,16 +143,18 @@ def render(text: str,
         entities = copy.deepcopy(entities)
         for entity in entities:
             if color_attr_key not in entity['attr']:
-                raise ValueError(f'color_attr_key "{color_attr_key}" not found in entity attributes.')
+                raise ValueError(f'color_attr_key "{color_attr_key}" not found in an entity (entity_id: {entity["entity_id"]}).')
         
         # Get unique attribute values
-        theme_colors = load_theme_colors(theme)
         unique_attr = set([entity['attr'][color_attr_key] for entity in entities])
-        attr_color_map = get_attr_color_map(unique_attr, theme_colors)
-
-        # Apply colors to entities
+        
+        # Apply color index to entities
+        theme_colors = load_theme_colors(theme)
+        attr_color_map = {attr: i % len(theme_colors) for i, attr in sorted(enumerate(unique_attr))}
         for entity in entities:
             entity['color'] = attr_color_map[entity['attr'][color_attr_key]]
+            
+    # If no color assignment is provided, leave entity["color"] as None and use CSS default colors
 
     # Read and embed the CSS and JS files directly into the HTML content.
     css_file_path = os.path.join(app.static_folder, 'style.css')
@@ -163,10 +167,14 @@ def render(text: str,
         js_content = js_file.read()
 
     # Package data into JSON
+    print(entities)
+    
     data = {
         'text': text,
         'entities': entities,
-        'theme': theme
+        'theme': theme,
+        'light_theme_colors': load_theme_colors("light"),
+        'dark_theme_colors': load_theme_colors("dark")
     }
     if relations:
         data['relations'] = relations

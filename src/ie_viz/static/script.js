@@ -1,4 +1,5 @@
 // Global variables
+let currentTheme = data.theme;
 let activeEntities = data.entities;
 let filteredRelations = null;
 if ('relations' in data) {
@@ -20,6 +21,19 @@ function initializeFilters() {
     const header = document.createElement('div');
     header.className = 'header-container';
     document.body.appendChild(header);
+
+    // Create theme toggle button
+    const themeButton = document.createElement('button');
+    themeButton.className = 'theme-button';
+    themeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>`;
+    header.appendChild(themeButton);
+
+    // Add click event listener for theme toggle
+    themeButton.addEventListener('click', () => {
+        toggleTheme();
+    });
 
     // Create filter button
     const button = document.createElement('button');
@@ -282,6 +296,28 @@ function applyFilters(filterState) {
     });
 }
 
+function toggleTheme() {
+    // Toggle theme in data object
+    currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    // Toggle body class
+    document.body.classList.toggle('dark-theme');
+    
+    // Update entity colors if they use theme-specific colors
+    const entities = document.querySelectorAll('.entity-mark');
+    entities.forEach(entity => {
+        const entityId = entity.id;
+        const entityData = data.entities.find(e => e.entity_id === entityId);
+        
+        if (entityData && typeof entityData.color === 'number') {
+            const colorSet = currentTheme === 'light' ? 
+                data.light_theme_colors : 
+                data.dark_theme_colors;
+            
+            entity.style.backgroundColor = colorSet[entityData.color].color_code;
+        }
+    });
+}
 
 function alineDisplayRelation() {
     // Get the display-textbox (div) and display-relation (svg) elements
@@ -347,9 +383,23 @@ function updateEntities(text, entities) {
         entityElement.id = ent.entity_id;
         entityElement.className = "entity-mark";
         entityElement.textContent = entityText;
-        if (ent.color) {
+
+        // Assign entity color. If no color is provided, use the default background color in CSS
+        if (ent.color !== undefined) {
             entityElement.style.background = 'none';
-            entityElement.style.backgroundColor = ent.color;
+            // if entity.color is a string, use it as the background color
+            if (typeof ent.color === 'string') {
+                entityElement.style.backgroundColor = ent.color;
+            }
+            // if entity.color is a integer, use it as the index of the color palette
+            else if (typeof ent.color === 'number') {
+                if (currentTheme === 'light') {
+                    entityElement.style.backgroundColor = data.light_theme_colors[ent.color]["color_code"];
+                }
+                else {
+                    entityElement.style.backgroundColor = data.dark_theme_colors[ent.color]["color_code"];
+                }
+            }
         }
         entityElement.addEventListener('mouseenter', function(event) {
             if (ent.attr) {
