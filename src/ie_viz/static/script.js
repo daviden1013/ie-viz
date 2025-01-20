@@ -24,7 +24,7 @@ function initializeFilters() {
     // Create filter button
     const button = document.createElement('button');
     button.className = 'filters-button';
-    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>';
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>';
     header.appendChild(button);
 
     const panel = document.createElement('div');
@@ -102,11 +102,21 @@ function createFilterUI(filterState, panel) {
     logicLabel.style.cursor = 'pointer';
 
     const labelText = document.createElement('span');
-    labelText.textContent = 'Use AND logic between keys';
-    
+    labelText.textContent = 'Logic between attribute keys: ';
+    labelText.style.marginRight = '8px';
+
+    const toggleContainer = document.createElement('div');
+    toggleContainer.style.display = 'flex';
+    toggleContainer.style.alignItems = 'center';
+    toggleContainer.style.gap = '8px';
+
+    const orText = document.createElement('span');
+    orText.textContent = 'OR';
+    orText.style.fontSize = '0.9em';
+
     const toggleSwitch = document.createElement('div');
     toggleSwitch.className = 'toggle-switch';
-    
+
     const toggleInput = document.createElement('input');
     toggleInput.type = 'checkbox';
     toggleInput.checked = filterState.useAndLogic;
@@ -118,10 +128,19 @@ function createFilterUI(filterState, panel) {
     const toggleSlider = document.createElement('span');
     toggleSlider.className = 'toggle-slider';
 
+    const andText = document.createElement('span');
+    andText.textContent = 'AND';
+    andText.style.fontSize = '0.9em';
+
     toggleSwitch.appendChild(toggleInput);
     toggleSwitch.appendChild(toggleSlider);
+
+    toggleContainer.appendChild(orText);
+    toggleContainer.appendChild(toggleSwitch);
+    toggleContainer.appendChild(andText);
+
     logicLabel.appendChild(labelText);
-    logicLabel.appendChild(toggleSwitch);
+    logicLabel.appendChild(toggleContainer);
     logicToggleContainer.appendChild(logicLabel);
     filterContainer.appendChild(logicToggleContainer);
 
@@ -202,34 +221,23 @@ function createFilterUI(filterState, panel) {
 
 // Function to apply filters to entities
 function applyFilters(filterState) {
-    console.log("=== Starting applyFilters ===");
-    console.log("FilterState:", filterState);
-    console.log("Original entities:", data.entities);
-    console.log("Original relations:", data.relations);
-
     activeEntities = data.entities.filter(entity => {
-        console.log("\nChecking entity:", entity);
         if (!entity.attr) {
-            console.log("No attributes, excluding entity");
             return false;
         }
         
         // Get only selected filters
         const selectedFilters = filterState.keys.filter(f => f.selected);
-        console.log("Selected filters:", selectedFilters);
         
         if (selectedFilters.length === 0) {
-            console.log("No filters selected, including entity");
             return true;
         }
 
         // Function to check if entity matches a single filter key
         const matchesFilter = (filter) => {
             const entityValue = entity.attr[filter.key];
-            console.log(`Checking filter ${filter.key}, entity value:`, entityValue);
             
             if (!entityValue) {
-                console.log(`No value for ${filter.key}`);
                 return false;
             }
             
@@ -237,7 +245,6 @@ function applyFilters(filterState) {
             const matches = filter.valueFilters.some(valueFilter => 
                 valueFilter.selected && valueFilter.value === entityValue
             );
-            console.log(`Matches for ${filter.key}:`, matches);
             return matches;
         };
 
@@ -245,54 +252,38 @@ function applyFilters(filterState) {
         if (filterState.useAndLogic) {
             // AND logic between keys - must match ALL selected filter keys
             result = selectedFilters.every(matchesFilter);
-            console.log("Using AND logic, result:", result);
         } else {
             // OR logic between keys - must match ANY selected filter key
             result = selectedFilters.some(matchesFilter);
-            console.log("Using OR logic, result:", result);
         }
         
         return result;
     });
-
-    console.log("\nActive entities after filtering:", activeEntities);
     
     // Update display with filtered entities and handle relations after entities are updated
     updateEntities(data.text, activeEntities);
     
-    console.log("Waiting for entities to render...");
     // Wait for the next frame to ensure entities are rendered
     requestAnimationFrame(() => {
-        console.log("Entities rendered, updating relations...");
         if (data.relations) {
             const activeEntityIds = new Set(activeEntities.map(e => e.entity_id));
-            console.log("Active entity IDs:", Array.from(activeEntityIds));
             
             filteredRelations = data.relations.filter(rel => {
                 const entity1Exists = document.getElementById(rel.entity_1_id) !== null;
                 const entity2Exists = document.getElementById(rel.entity_2_id) !== null;
-                console.log(`Checking relation ${rel.entity_1_id} -> ${rel.entity_2_id}:`,
-                    `Entity1 exists: ${entity1Exists}`,
-                    `Entity2 exists: ${entity2Exists}`,
-                    `Entity1 active: ${activeEntityIds.has(rel.entity_1_id)}`,
-                    `Entity2 active: ${activeEntityIds.has(rel.entity_2_id)}`
-                );
+
                 return activeEntityIds.has(rel.entity_1_id) && 
                        activeEntityIds.has(rel.entity_2_id) &&
                        entity1Exists && entity2Exists;
             });
             
-            console.log("Filtered relations:", filteredRelations);
             updateRelations(filteredRelations, relationPathLevel);
-        } else {
-            console.log("No relations data available");
-        }
+        } 
     });
 }
 
 
 function alineDisplayRelation() {
-    console.log("Aligning display relation...");
     // Get the display-textbox (div) and display-relation (svg) elements
     const textDiv = document.getElementById("display-textbox");
     const svgContainer = document.getElementById("display-relation");
@@ -304,7 +295,6 @@ function alineDisplayRelation() {
 
     // Get dimensions of the display-textbox
     const textDivRect = textDiv.getBoundingClientRect();
-    console.log("Text div dimensions:", textDivRect);
 
     // Set dimensions of the SVG container
     svgContainer.style.height = `${textDivRect.height}px`;
@@ -312,11 +302,6 @@ function alineDisplayRelation() {
     
     // Ensure SVG viewport is set correctly
     svgContainer.setAttribute('viewBox', `0 0 ${textDivRect.width} ${textDivRect.height}`);
-    console.log("SVG container dimensions set:", {
-        height: svgContainer.style.height,
-        width: svgContainer.style.width,
-        viewBox: svgContainer.getAttribute('viewBox')
-    });
 }
 
 function updateEntities(text, entities) {
@@ -441,8 +426,6 @@ function hideTooltip() {
 }
 
 function updateRelations(relations, r) {
-    console.log("Updating relations...", { relations, r });
-    
     // Get the display-textbox (div) and display-relation (svg) elements
     const textDiv = document.getElementById("display-textbox");
     const svgContainer = document.getElementById("display-relation");
@@ -459,13 +442,10 @@ function updateRelations(relations, r) {
 
     // If no relations
     if (!relations || relations.length === 0) {
-        console.log("No relations to update");
         return null;
     }
 
     relations.forEach((rel, index) => {
-        console.log(`Processing relation ${index}:`, rel);
-        
         const entity1Element = document.getElementById(rel.entity_1_id);
         const entity2Element = document.getElementById(rel.entity_2_id);
 
@@ -481,17 +461,6 @@ function updateRelations(relations, r) {
 
         const entity1Rect = entity1Element.getBoundingClientRect();
         const entity2Rect = entity2Element.getBoundingClientRect();
-
-        console.log("Entity rectangles:", {
-            entity1: {
-                id: rel.entity_1_id,
-                rect: entity1Rect
-            },
-            entity2: {
-                id: rel.entity_2_id,
-                rect: entity2Rect
-            }
-        });
 
         // Get the computed style of the entity elements
         const entity1Style = window.getComputedStyle(entity1Element);
@@ -515,11 +484,6 @@ function updateRelations(relations, r) {
             : (entity2Rect.left + entity2Rect.width / 2 - textDivRect.left);
         
         const entity2Y = entity2Rect.top - textDivRect.top;
-
-        console.log("Calculated positions:", {
-            entity1: { x: entity1X, y: entity1Y },
-            entity2: { x: entity2X, y: entity2Y }
-        });
 
         // start with entity on left
         var startX = null;
@@ -554,7 +518,6 @@ function updateRelations(relations, r) {
             pathD = `M${startX} ${startY} a ${r} ${r} 0 0 1 ${r} -${r} L${endX - r} ${startY - r} a ${r} ${r} 0 0 1 ${r} ${r} L${endX} ${endY}`;
         }
         
-        console.log("Path data:", pathD);
         path.setAttribute("d", pathD);
         path.setAttribute("class", "relation-path");
         svgContainer.appendChild(path);
