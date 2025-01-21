@@ -34,10 +34,7 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
 } 
 
-.entity-mark:hover {
-    background-color: #b2ebf2; /* Slightly darker cyan on hover */
-    color: #004d40; /* Darker text on hover */
-}
+
 
 .custom-tooltip {
     word-wrap: break-word; /* Ensures long words break into the next line */
@@ -48,7 +45,7 @@ body {
     color: #fff;
     padding: 8px; /* Slightly larger padding */
     border-radius: 8px; /* More rounded corners */
-    z-index: 3;
+    z-index: 6;
     white-space: normal;
     pointer-events: none;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
@@ -96,6 +93,7 @@ body {
     width: 95%;
     height: 95%;
     position: absolute;
+    transition: width 0.3s ease-in-out; 
 }
 
 .theme-button {
@@ -291,3 +289,155 @@ body {
     font-size: 0.9em;
     opacity: 0.9;
 }
+
+.table-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.table-button {
+    position: fixed;
+    top: 0.5rem;
+    left: 4.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    color: var(--icon-color);
+    background-color: var(--background-color);
+    border: 1px solid var(--text-color);
+    cursor: pointer;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0.25rem;
+}
+
+.table-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background-color: var(--background-color);
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 5;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+.table-panel.open {
+    transform: translateX(0);
+}
+
+.table-panel table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.table-panel th {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid rgba(128, 128, 128, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    text-align: left;
+}
+
+.table-panel td {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    line-height: 1.4;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-panel tr:last-child td {
+    border-bottom: none;
+}
+
+.table-panel tbody tr:hover {
+    background-color: rgba(128, 128, 128, 0.05);
+    transition: background-color 0.2s ease;
+}
+
+/* Add alternating row colors */
+.table-panel tbody tr:nth-child(even) {
+    background-color: rgba(128, 128, 128, 0.02);
+}
+
+/* Add responsive scrolling for table content */
+.table-panel {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128, 128, 128, 0.3) transparent;
+}
+
+.table-panel::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.table-panel::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, 0.3);
+    border-radius: 4px;
+}
+ 
+.table-panel .table-section h2 {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(128, 128, 128, 0.2);
+}
+
+#display-textbox-container.with-table {
+    width: 42%;
+    left: 2.5%; 
+}
+
+.entity-table-mark {
+    padding-right: 0.3em;
+    padding-left: 0.3em;
+    padding-top: 0.05em;
+    padding-bottom: 0.05em;
+    margin: 0 0.1em;
+    line-height: 1;
+    border-radius: 0.35em;
+    background: linear-gradient(#3f87a6, #ebf8e1, #f69d3c);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+} 
+
+.entity-highlight {
+    text-shadow: 0 0 0.5px currentColor;
+    font-synthesis: none;
+    transition: all 0.3s ease;
+}
+
+/* Use the entity's background color for glow via JavaScript */
+.entity-highlight-glow {
+    box-shadow: 0 0 8px currentColor, 0 0 12px currentColor;
+} 

@@ -167,8 +167,6 @@ def render(text: str,
         js_content = js_file.read()
 
     # Package data into JSON
-    print(entities)
-    
     data = {
         'text': text,
         'entities': entities,

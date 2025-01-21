@@ -16,6 +16,29 @@ const checkElement = async selector => {
 };
 
 
+function toggleTheme() {
+    // Toggle theme in data object
+    currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    // Toggle body class
+    document.body.classList.toggle('dark-theme');
+    
+    // Update entity colors if they use theme-specific colors
+    const entities = document.querySelectorAll('.entity-mark');
+    entities.forEach(entity => {
+        const entityId = entity.id;
+        const entityData = data.entities.find(e => e.entity_id === entityId);
+        
+        if (entityData && typeof entityData.color === 'number') {
+            const colorSet = currentTheme === 'light' ? 
+                data.light_theme_colors : 
+                data.dark_theme_colors;
+            
+            entity.style.backgroundColor = colorSet[entityData.color].color_code;
+        }
+    });
+}
+
 function initializeFilters() {
     // Create header container
     const header = document.createElement('div');
@@ -62,6 +85,29 @@ function initializeFilters() {
     
     const filterState = extractAttributeFilters(data.entities);
     createFilterUI(filterState, panel.querySelector('div'));
+
+
+    // Table button
+    const tableButton = document.createElement('button');
+    tableButton.className = 'table-button';
+    tableButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>';
+    header.appendChild(tableButton);
+    
+    // Table panel setup
+    const tablePanel = createTablePanel();
+    tableButton.addEventListener('click', () => {
+        tablePanel.classList.toggle('open');
+        const container = document.getElementById('display-textbox-container');
+        container.classList.toggle('with-table');
+        
+        // Update relations after layout changes
+        if (data.relations) {
+            setTimeout(() => {
+                alineDisplayRelation();
+                updateRelations(filteredRelations, relationPathLevel);
+            }, 300); // Wait for transition to complete
+        }
+    });
 }
 
 
@@ -296,27 +342,211 @@ function applyFilters(filterState) {
     });
 }
 
-function toggleTheme() {
-    // Toggle theme in data object
-    currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+function createTablePanel() {
+    const panel = document.createElement('div');
+    panel.className = 'table-panel';
     
-    // Toggle body class
-    document.body.classList.toggle('dark-theme');
+    // Create container for tables
+    const content = document.createElement('div');
     
-    // Update entity colors if they use theme-specific colors
-    const entities = document.querySelectorAll('.entity-mark');
-    entities.forEach(entity => {
-        const entityId = entity.id;
-        const entityData = data.entities.find(e => e.entity_id === entityId);
-        
-        if (entityData && typeof entityData.color === 'number') {
-            const colorSet = currentTheme === 'light' ? 
-                data.light_theme_colors : 
-                data.dark_theme_colors;
-            
-            entity.style.backgroundColor = colorSet[entityData.color].color_code;
+    // Entities table section
+    const entitySection = document.createElement('div');
+    entitySection.className = 'table-section';
+    entitySection.innerHTML = '<h2>Entities</h2>';
+    const entityTable = createEntityTable();
+    entitySection.appendChild(entityTable);
+    content.appendChild(entitySection);
+
+    // Relations table section
+    if (data.relations) {
+        const relationSection = document.createElement('div');
+        relationSection.className = 'table-section';
+        relationSection.innerHTML = '<h2>Relations</h2>';
+        const relationTable = createRelationTable();
+        relationSection.appendChild(relationTable);
+        content.appendChild(relationSection);
+    }
+
+    panel.appendChild(content);
+    document.body.appendChild(panel);
+    return panel;
+}
+
+function createEntityTable() {
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const tbody = document.createElement('tbody');
+
+    // Collect all unique attribute keys from entities
+    const attributeKeys = new Set();
+    activeEntities.forEach(entity => {
+        if (entity.attr) {
+            Object.keys(entity.attr).forEach(key => attributeKeys.add(key));
         }
     });
+    const sortedAttributeKeys = Array.from(attributeKeys).sort();
+
+    // Create header row with base columns + attribute columns
+    const headerRow = document.createElement('tr');
+    
+    // Add ID and Text columns first
+    ['ID', 'Text', ...sortedAttributeKeys].forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+
+    // Create data rows
+    activeEntities.forEach(entity => {
+        const row = document.createElement('tr');
+        
+        // ID cell
+        const idCell = document.createElement('td');
+        idCell.textContent = entity.entity_id;
+        row.appendChild(idCell);
+        
+        // Text cell with colored mark
+        const textCell = document.createElement('td');
+        const entityMark = document.createElement('mark');
+        entityMark.className = 'entity-table-mark';
+        entityMark.setAttribute('entity-id', entity.entity_id);
+        entityMark.textContent = data.text.substring(entity.start, entity.end);
+        entityMark.addEventListener('mouseenter', () => handleEntityHighlight(entity.entity_id, true));
+        entityMark.addEventListener('mouseleave', () => handleEntityHighlight(entity.entity_id, false));
+        
+        // Apply entity color styling
+        if (entity.color !== undefined) {
+            entityMark.style.background = 'none';
+            if (typeof entity.color === 'string') {
+                entityMark.style.backgroundColor = entity.color;
+            } else if (typeof entity.color === 'number') {
+                if (currentTheme === 'light') {
+                    entityMark.style.backgroundColor = data.light_theme_colors[entity.color]["color_code"];
+                } else {
+                    entityMark.style.backgroundColor = data.dark_theme_colors[entity.color]["color_code"];
+                }
+            }
+        }
+
+        textCell.appendChild(entityMark);
+        row.appendChild(textCell);
+        
+        // Add cells for each attribute
+        sortedAttributeKeys.forEach(attrKey => {
+            const attrCell = document.createElement('td');
+            if (entity.attr && entity.attr[attrKey] !== undefined) {
+                attrCell.textContent = entity.attr[attrKey];
+            } else {
+                attrCell.textContent = '-';
+                attrCell.style.color = 'rgba(128, 128, 128, 0.5)'; // Dimmed color for empty values
+            }
+            row.appendChild(attrCell);
+        });
+
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    return table;
+}
+
+function createRelationTable() {
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const tbody = document.createElement('tbody');
+
+    // Create header row
+    const headerRow = document.createElement('tr');
+    ['Entity 1 ID', 'Entity 1', 'Entity 2 ID', 'Entity 2'].forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+
+    // Create data rows
+    filteredRelations.forEach(relation => {
+        const row = document.createElement('tr');
+        
+        // Entity 1 ID cell
+        const entity1IdCell = document.createElement('td');
+        entity1IdCell.textContent = relation.entity_1_id;
+        row.appendChild(entity1IdCell);
+
+        // Entity 1 cell
+        const entity1Cell = document.createElement('td');
+        const entity1 = activeEntities.find(e => e.entity_id === relation.entity_1_id);
+        if (entity1) {
+            const entityMark1 = document.createElement('mark');
+            entityMark1.className = 'entity-table-mark';
+            entityMark1.setAttribute('entity-id', entity1.entity_id);
+            entityMark1.textContent = data.text.substring(entity1.start, entity1.end);
+            entityMark1.addEventListener('mouseenter', () => handleEntityHighlight(entity1.entity_id, true));
+            entityMark1.addEventListener('mouseleave', () => handleEntityHighlight(entity1.entity_id, false));
+            
+            // Apply entity color styling
+            if (entity1.color !== undefined) {
+                entityMark1.style.background = 'none';
+                if (typeof entity1.color === 'string') {
+                    entityMark1.style.backgroundColor = entity1.color;
+                } else if (typeof entity1.color === 'number') {
+                    if (currentTheme === 'light') {
+                        entityMark1.style.backgroundColor = data.light_theme_colors[entity1.color]["color_code"];
+                    } else {
+                        entityMark1.style.backgroundColor = data.dark_theme_colors[entity1.color]["color_code"];
+                    }
+                }
+            }
+            entity1Cell.appendChild(entityMark1);
+        } else {
+            entity1Cell.textContent = relation.entity_1_id;
+        }
+        row.appendChild(entity1Cell);
+        
+        // Entity 2 ID cell
+        const entity2IdCell = document.createElement('td');
+        entity2IdCell.textContent = relation.entity_2_id;
+        row.appendChild(entity2IdCell);
+
+        // Entity 2 cell
+        const entity2Cell = document.createElement('td');
+        const entity2 = activeEntities.find(e => e.entity_id === relation.entity_2_id);
+        if (entity2) {
+            const entityMark2 = document.createElement('mark');
+            entityMark2.className = 'entity-table-mark';
+            entityMark2.setAttribute('entity-id', entity2.entity_id);
+            entityMark2.textContent = data.text.substring(entity2.start, entity2.end);
+            entityMark2.addEventListener('mouseenter', () => handleEntityHighlight(entity2.entity_id, true));
+            entityMark2.addEventListener('mouseleave', () => handleEntityHighlight(entity2.entity_id, false));
+            
+            // Apply entity color styling
+            if (entity2.color !== undefined) {
+                entityMark2.style.background = 'none';
+                if (typeof entity2.color === 'string') {
+                    entityMark2.style.backgroundColor = entity2.color;
+                } else if (typeof entity2.color === 'number') {
+                    if (currentTheme === 'light') {
+                        entityMark2.style.backgroundColor = data.light_theme_colors[entity2.color]["color_code"];
+                    } else {
+                        entityMark2.style.backgroundColor = data.dark_theme_colors[entity2.color]["color_code"];
+                    }
+                }
+            }
+            entity2Cell.appendChild(entityMark2);
+        } else {
+            entity2Cell.textContent = relation.entity_2_id;
+        }
+        row.appendChild(entity2Cell);
+        
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    return table;
 }
 
 function alineDisplayRelation() {
@@ -381,8 +611,11 @@ function updateEntities(text, entities) {
         var entityText = text.substring(ent.start, ent.end);
         var entityElement = document.createElement("mark");
         entityElement.id = ent.entity_id;
+        entityElement.setAttribute('entity-id', ent.entity_id);
         entityElement.className = "entity-mark";
         entityElement.textContent = entityText;
+        entityElement.addEventListener('mouseenter', () => handleEntityHighlight(ent.entity_id, true));
+        entityElement.addEventListener('mouseleave', () => handleEntityHighlight(ent.entity_id, false));
 
         // Assign entity color. If no color is provided, use the default background color in CSS
         if (ent.color !== undefined) {
@@ -574,6 +807,25 @@ function updateRelations(relations, r) {
     });
 }
 
+function handleEntityHighlight(entityId, isEnter) {
+    // Find all entities with this ID in the text display
+    const textEntities = document.querySelectorAll(`mark[entity-id="${entityId}"]`);
+    
+    textEntities.forEach(entity => {
+        if (isEnter) {
+            entity.classList.add('entity-highlight');
+            // Get the background color and use it for the glow
+            const style = window.getComputedStyle(entity);
+            const backgroundColor = style.backgroundColor;
+            entity.style.boxShadow = `0 0 8px ${backgroundColor}, 0 0 12px ${backgroundColor}`;
+        } else {
+            entity.classList.remove('entity-highlight');
+            entity.style.boxShadow = '';
+        }
+    });
+}
+
+
 // Get the data from the script tag
 if ('theme' in data) {
     if (data.theme === 'dark') {
@@ -599,6 +851,7 @@ if ('relations' in data) {
         updateRelations(filteredRelations, relationPathLevel);
     });
 }
+
 
 // Initialize filters
 document.addEventListener('DOMContentLoaded', initializeFilters);
