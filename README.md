@@ -18,12 +18,18 @@ The **ie-viz** is a lightweight tool for in-line information extraction (IE) vis
 
 | Features | Support |
 |----------|----------|
-| **Named Entity Marks** | :white_check_mark: with customizable colors |
-| **Entity Attributes** | :white_check_mark: as tooltip |
-| **Entity Relations** | :white_check_mark: as path linking entities |
+| **Named Entity Marks** | :white_check_mark: with customizable colors and table view |
+| **Entity Attributes** | :white_check_mark: as tooltip and table view |
+| **Entity Relations** | :white_check_mark: as path linking entities and table view |
+| **Filtering**| :white_check_mark: by entity types |
 | **Theme** | :white_check_mark: light and dark themes |
 | **Deployment** | :white_check_mark: Flask APP or HTML rendering |
 
+The filtering feature supports OR and AND logic for all available entity attributes. The table panel (collapsible) displays the selected entities, attributes, and relations.  
+<p align="center">
+  <img src="doc_asset/readme_img/filter.PNG" width="45%">
+  <img src="doc_asset/readme_img/side_tables.PNG" width="45%">
+</p>
 
 ## Prerequisite
 - python ^3.11
