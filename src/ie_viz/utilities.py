@@ -158,13 +158,22 @@ def render(text: str,
 
     # Read and embed the CSS and JS files directly into the HTML content.
     css_file_path = os.path.join(app.static_folder, 'style.css')
-    js_file_path = os.path.join(app.static_folder, 'script.js')
 
     with open(css_file_path, 'r') as css_file:
         css_content = css_file.read()
     
-    with open(js_file_path, 'r') as js_file:
-        js_content = js_file.read()
+    js_files = [
+        'DisplayTextBoxManager.js',
+        'FilterManager.js',
+        'TableManager.js',
+        'App.js'
+    ]
+    
+    js_content = []
+    for js_file in js_files:
+        file_path = os.path.join(app.static_folder, 'js', js_file)
+        with open(file_path, 'r') as f:
+            js_content.append(f.read())
 
     # Package data into JSON
     data = {
@@ -198,7 +207,7 @@ def render(text: str,
             const data = {data_json};
             
             // Original JavaScript logic
-            {js_content}
+            {chr(10).join(js_content)}
 
         </script>
     </body>
