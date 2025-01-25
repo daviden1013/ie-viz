@@ -52,7 +52,8 @@ def render(text: str,
           relations: List[Dict[str, str]]=None,
           theme:str = "light",
           color_attr_key:str=None,
-          color_map_func:Callable=None
+          color_map_func:Callable=None,
+          title:str="Named Entity Visualization"
           ):
     """
     This function serves the information extracton visualization App.
@@ -80,6 +81,8 @@ def render(text: str,
         The function to be used for mapping the entity attributes to colors. When provided, the color_attr_key and 
         theme will be overwritten. The function must take an entity dictionary as input and 
         return a color string (default color name or hex color code).
+    title : str, Optional
+        The title of the HTML.
     """
     # Check text type is str
     if not isinstance(text, str):
@@ -192,7 +195,7 @@ def render(text: str,
     html_content = f"""
     <html>
     <head>
-        <title>Named Entity Visualization</title>
+        <title>{title}</title>
         <style>
         {css_content}
         </style>
@@ -222,6 +225,7 @@ def serve(text: str,
           theme:str = "light",
           color_attr_key:str=None,
           color_map_func:Callable=None,
+          title:str="Named Entity Visualization",
           host:str="0.0.0.0",
           port:int=5000
           ):
@@ -250,6 +254,8 @@ def serve(text: str,
     color_map_func : Callable, Optional
         The function to be used for mapping the entity attributes to colors. When provided, the color_attr_key and 
         theme will be overwritten. The function must take an entity dictionary as input and return a color string (hex).
+    title : str, Optional
+        The title of the HTML.
     host : str, Optional
         The host address to run the server on.
     port : int, Optional
@@ -288,7 +294,8 @@ def serve(text: str,
                         relations=relations, 
                         theme=theme,
                         color_attr_key=color_attr_key,
-                        color_map_func=color_map_func)
+                        color_map_func=color_map_func,
+                        title=title)
 
     # Run the Flask app with SocketIO
     socketio.run(app, host=host, port=port, allow_unsafe_werkzeug=True)
