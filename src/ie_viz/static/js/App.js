@@ -155,22 +155,26 @@ class App {
 
     applyFilters(filterState) {
         this.activeEntities = this.data.entities.filter(entity => {
-            if (!entity.attr) return false;
-            
             const selectedFilters = filterState.keys.filter(f => f.selected);
             if (selectedFilters.length === 0) return true;
 
             const matchesFilter = (filter) => {
-                const entityValue = entity.attr[filter.key];
-                if (!entityValue) return false;
-                return filter.valueFilters.some(valueFilter => 
-                    valueFilter.selected && valueFilter.value === entityValue
-                );
+                if (entity.attr) {
+                    const entityValue = entity.attr[filter.key];
+                    if (!entityValue) return false;
+                    return filter.valueFilters.some(valueFilter => 
+                        valueFilter.selected && valueFilter.value === entityValue
+                    );
+                }
             };
 
-            return filterState.useAndLogic ? 
-                selectedFilters.every(matchesFilter) : 
-                selectedFilters.some(matchesFilter);
+            if (filterState.useAndLogic) {
+                if (!entity.attr) return false;
+                return selectedFilters.every(matchesFilter);
+            } else {
+                if (!entity.attr) return true;
+                return selectedFilters.some(matchesFilter);
+            }
         });
         
         this.displayManager.updateEntities(this.data.text, this.activeEntities, this.currentTheme);
