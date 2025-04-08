@@ -443,6 +443,20 @@ body {
     margin-bottom: 2rem;
 }
 
+.table-panel .table-section table {
+    width: 100%;                /* Fit table width to container */
+    border-collapse: collapse;  /* Optional, makes borders clean */
+}
+
+.table-panel .table-section th,
+.table-panel .table-section td {
+    word-break: break-word;     /* Break long words if needed */
+    overflow-wrap: break-word;  /* Wrap content gracefully */
+    white-space: normal;        /* Allow natural wrapping */
+    padding: 0.5rem;            /* Cell padding for readability */
+    border: 1px solid rgba(128, 128, 128, 0.2); /* Optional borders */
+}
+
 #display-textbox-container.with-table {
     left: 0%;
     width: 45%;

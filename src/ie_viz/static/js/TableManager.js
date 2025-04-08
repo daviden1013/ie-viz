@@ -100,7 +100,12 @@ class TableManager {
             sortedAttributeKeys.forEach(attrKey => {
                 const attrCell = document.createElement('td');
                 if (entity.attr && entity.attr[attrKey] !== undefined) {
-                    attrCell.textContent = entity.attr[attrKey];
+                    // if the attribute is an object, display it as a JSON string
+                    let rawAtrributes = entity.attr[attrKey];
+                    const prettyAttributes = (typeof rawAtrributes === 'object') 
+                        ? JSON.stringify(rawAtrributes, null, 2) 
+                        : rawAtrributes;
+                    attrCell.textContent = prettyAttributes;
                 } else {
                     attrCell.textContent = '-';
                     attrCell.style.color = 'rgba(128, 128, 128, 0.5)';
