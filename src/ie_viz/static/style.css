@@ -32,6 +32,7 @@ body {
     background: linear-gradient(#3f87a6, #ebf8e1, #f69d3c);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Subtle shadow */
     transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+    white-space: pre-wrap;
 } 
 
 
