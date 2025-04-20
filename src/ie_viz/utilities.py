@@ -96,6 +96,11 @@ def render(text: str,
             raise TypeError("entities must be a list of dictionaries.")
         if not all(key in entity for key in ['entity_id', 'start', 'end']):
             raise ValueError("entity dictionary must have the keys 'entity_id', 'start', 'end'.")
+        
+    # Check entity_id is unique
+    entity_ids = [entity['entity_id'] for entity in entities]
+    if len(entity_ids) != len(set(entity_ids)):
+        raise ValueError("entity_id must be unique.")
 
     # Check relations type is List[Dict[str, str]]
     if relations:
@@ -286,16 +291,18 @@ def serve(text: str,
     if 'render_page' in app.view_functions:
         app.view_functions.pop('render_page')
 
+    html = render(text=text, 
+                    entities=entities, 
+                    relations=relations, 
+                    theme=theme,
+                    color_attr_key=color_attr_key,
+                    color_map_func=color_map_func,
+                    title=title)
+
     # Render page
     @app.route('/')
     def render_page():
-        return render(text=text, 
-                        entities=entities, 
-                        relations=relations, 
-                        theme=theme,
-                        color_attr_key=color_attr_key,
-                        color_map_func=color_map_func,
-                        title=title)
+        return html
 
     # Run the Flask app with SocketIO
     socketio.run(app, host=host, port=port, allow_unsafe_werkzeug=True)
