@@ -9,7 +9,7 @@ class DisplayTextBoxManager {
         // Clear current display textbox
         var textElement = document.getElementById("display-textbox");
         textElement.innerHTML = '';
-
+    
         // If no entities
         if (!entities || entities.length === 0) {
             text.split('\n').forEach((line, index, array) => {
@@ -20,84 +20,129 @@ class DisplayTextBoxManager {
             });
             return null;
         }
-
-        // Sort entities by start index
+    
+        // Parse entity positions as integers
         entities.forEach(entity => {
             entity.start = parseInt(entity.start);
             entity.end = parseInt(entity.end);
         });
-        entities.sort((a, b) => a.start - b.start);
-
-        // Add entities to the display textbox
-        var lastIndex = 0;
-        entities.forEach(entity => {
-            // Add text before the entity
-            if (lastIndex < entity.start) {
-                var nonEntityText = text.substring(lastIndex, entity.start);
-                nonEntityText.split('\n').forEach((line, index, array) => {
-                    textElement.appendChild(document.createTextNode(line));
+    
+        // Sort entities by start index. If start index is the same, sort by length (longer first)
+        entities.sort((a, b) => {
+            if (a.start !== b.start) {
+                return a.start - b.start;
+            }
+            return b.end - a.end;
+        });
+    
+        // Process entities with a stack for nesting
+        let currentPosition = 0;
+        let currentContainer = textElement;
+        let entityStack = []; // Stack to track open entity marks
+    
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+    
+            // Close entity marks that end before the current entity starts
+            while (entityStack.length > 0 && entityStack[entityStack.length - 1].end <= entity.start) {
+                const finishedEntity = entityStack.pop();
+                
+                // Add remaining text before closing
+                if (currentPosition < finishedEntity.end) {
+                    const remainingText = text.substring(currentPosition, finishedEntity.end);
+                    remainingText.split('\n').forEach((line, index, array) => {
+                        currentContainer.appendChild(document.createTextNode(line));
+                        if (index < array.length - 1) {
+                            currentContainer.appendChild(document.createElement("br"));
+                        }
+                    });
+                }
+                
+                // Move up one level in the container hierarchy
+                currentContainer = currentContainer.parentElement || textElement;
+                currentPosition = finishedEntity.end;
+            }
+    
+            // Add text before the current entity
+            if (currentPosition < entity.start) {
+                const preText = text.substring(currentPosition, entity.start);
+                preText.split('\n').forEach((line, index, array) => {
+                    currentContainer.appendChild(document.createTextNode(line));
                     if (index < array.length - 1) {
-                        textElement.appendChild(document.createElement("br"));
+                        currentContainer.appendChild(document.createElement("br"));
                     }
                 });
             }
-
-            // Add the entity text
-            var entityText = text.substring(entity.start, entity.end);
-            var entityElement = document.createElement("mark");
+    
+            // Create entity mark element
+            const entityElement = document.createElement("mark");
             entityElement.id = entity.entity_id;
             entityElement.setAttribute('entity-id', entity.entity_id);
             entityElement.className = "entity-mark";
-            entityElement.textContent = entityText;
+            
+            // Add event listeners
             entityElement.addEventListener('mouseenter', () => this.handleEntityHighlight(entity.entity_id, true));
             entityElement.addEventListener('mouseleave', () => this.handleEntityHighlight(entity.entity_id, false));
-
-            // Assign entity color. If no color is provided, use the default background color in CSS
+            
+            // Add tooltip
+            entityElement.addEventListener('mouseenter', (event) => {
+                const tooltipText = entity.attr ? 
+                    `Entity ID: ${entity.entity_id}<br>Text: ${text.substring(entity.start, entity.end)}<br>Attributes: ${JSON.stringify(entity.attr, null, 2).replace(/\n/g, '<br>').replace(/  /g, '&nbsp;&nbsp;')}` :
+                    `Entity ID: ${entity.entity_id}<br>Text: ${text.substring(entity.start, entity.end)}`;
+                this.showTooltip(event, tooltipText);
+            });
+            entityElement.addEventListener('mouseleave', () => this.hideTooltip());
+            
+            // Apply entity color
             if (entity.color !== undefined) {
                 entityElement.style.background = 'none';
-                // if entity.color is a string, use it as the background color
                 if (typeof entity.color === 'string') {
                     entityElement.style.backgroundColor = entity.color;
-                }
-                // if entity.color is a integer, use it as the index of the color palette
-                else if (typeof entity.color === 'number') {
-                    if (currentTheme === 'light') {
-                        entityElement.style.backgroundColor = this.light_theme_colors[entity.color]["color_code"];
-                    }
-                    else {
-                        entityElement.style.backgroundColor = this.dark_theme_colors[entity.color]["color_code"];
-                    }
+                } else if (typeof entity.color === 'number') {
+                    const colorPalette = currentTheme === 'light' ? this.light_theme_colors : this.dark_theme_colors;
+                    entityElement.style.backgroundColor = colorPalette[entity.color]["color_code"];
                 }
             }
-
-            entityElement.addEventListener('mouseenter', (event) => {
-                if (entity.attr) {
-                    const prettyAttributes = JSON.stringify(entity.attr, null, 2).replace(/\n/g, '<br>').replace(/  /g, '&nbsp;&nbsp;');
-                    this.showTooltip(event, `Entity ID: ${entity.entity_id}<br>Text: ${entityText}<br>Attributes: ${prettyAttributes}`);
-                }
-                else {
-                    this.showTooltip(event, `Entity ID: ${entity.entity_id}<br>Text: ${entityText}`);
-                }
-            });
-
-            entityElement.addEventListener('mouseleave', (event) => {
-                this.hideTooltip();
-            });
-            textElement.appendChild(entityElement);
-
-            lastIndex = entity.end;
-            });
-
-            // Add remaining text after the last entity
-            if (lastIndex < text.length) {
-                var remainingText = text.substring(lastIndex);
+            
+            // Append the entity element to the current container
+            currentContainer.appendChild(entityElement);
+            
+            // Push to stack and update the current container and position
+            entityStack.push(entity);
+            currentContainer = entityElement;
+            currentPosition = entity.start;
+        }
+    
+        // Close any remaining open entities
+        while (entityStack.length > 0) {
+            const finishedEntity = entityStack.pop();
+            
+            // Add remaining text before closing
+            if (currentPosition < finishedEntity.end) {
+                const remainingText = text.substring(currentPosition, finishedEntity.end);
                 remainingText.split('\n').forEach((line, index, array) => {
-                    textElement.appendChild(document.createTextNode(line));
+                    currentContainer.appendChild(document.createTextNode(line));
                     if (index < array.length - 1) {
-                        textElement.appendChild(document.createElement("br"));
+                        currentContainer.appendChild(document.createElement("br"));
                     }
                 });
             }
+            
+            // Move up one level in the container hierarchy
+            currentContainer = currentContainer.parentElement || textElement;
+            currentPosition = finishedEntity.end;
+        }
+    
+        // Add remaining text after all entities
+        if (currentPosition < text.length) {
+            const remainingText = text.substring(currentPosition);
+            remainingText.split('\n').forEach((line, index, array) => {
+                currentContainer.appendChild(document.createTextNode(line));
+                if (index < array.length - 1) {
+                    currentContainer.appendChild(document.createElement("br"));
+                }
+            });
+        }
     }
 
     
