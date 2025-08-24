@@ -1,9 +1,10 @@
 class TableManager {
-    constructor(light_theme_colors, dark_theme_colors) {
+    constructor(light_theme_colors, dark_theme_colors, onEntityClick) {
         this.light_theme_colors = light_theme_colors;
         this.dark_theme_colors = dark_theme_colors;
         this.entityTable = null;
         this.relationTable = null;
+        this.onEntityClick = onEntityClick;
     }
 
     createTablePanel(text, entities, relations, currentTheme) {
@@ -82,6 +83,7 @@ class TableManager {
             entityMark.textContent = text.substring(entity.start, entity.end);
             entityMark.addEventListener('mouseenter', () => this.handleEntityHighlight(entity.entity_id, true));
             entityMark.addEventListener('mouseleave', () => this.handleEntityHighlight(entity.entity_id, false));
+            entityMark.addEventListener('click', () => this.onEntityClick(entity.entity_id));
             
             if (entity.color !== undefined) {
                 entityMark.style.background = 'none';
@@ -151,6 +153,7 @@ class TableManager {
                 entityMark1.textContent = text.substring(entity1.start, entity1.end);
                 entityMark1.addEventListener('mouseenter', () => this.handleEntityHighlight(entity1.entity_id, true));
                 entityMark1.addEventListener('mouseleave', () => this.handleEntityHighlight(entity1.entity_id, false));
+                entityMark1.addEventListener('click', () => this.onEntityClick(entity1.entity_id));
                 
                 if (entity1.color !== undefined) {
                     entityMark1.style.background = 'none';
@@ -179,6 +182,7 @@ class TableManager {
                 entityMark2.textContent = text.substring(entity2.start, entity2.end);
                 entityMark2.addEventListener('mouseenter', () => this.handleEntityHighlight(entity2.entity_id, true));
                 entityMark2.addEventListener('mouseleave', () => this.handleEntityHighlight(entity2.entity_id, false));
+                entityMark2.addEventListener('click', () => this.onEntityClick(entity2.entity_id));
                 
                 if (entity2.color !== undefined) {
                     entityMark2.style.background = 'none';

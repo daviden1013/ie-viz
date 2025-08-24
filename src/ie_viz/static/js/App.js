@@ -15,13 +15,15 @@ class App {
         this.filterManager = new FilterManager(this.applyFilters.bind(this));
         this.tableManager = new TableManager(
             data.light_theme_colors,
-            data.dark_theme_colors
+            data.dark_theme_colors,
+            this.handleEntityClick.bind(this)
         );
 
         // Bind methods
         this.toggleTheme = this.toggleTheme.bind(this);
         this.initializeUI = this.initializeUI.bind(this);
         this.handleEntityHighlight = this.handleEntityHighlight.bind(this);
+        this.handleEntityClick = this.handleEntityClick.bind(this);
     }
 
     async initialize() {
@@ -203,6 +205,10 @@ class App {
     handleEntityHighlight(entityId, isEnter) {
         this.displayManager.handleEntityHighlight(entityId, isEnter);
         this.tableManager.handleEntityHighlight(entityId, isEnter);
+    }
+
+    handleEntityClick(entityId) {
+        this.displayManager.scrollToEntity(entityId);
     }
 }
 

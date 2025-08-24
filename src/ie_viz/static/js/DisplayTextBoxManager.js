@@ -331,4 +331,13 @@ class DisplayTextBoxManager {
         });
     }
 
+    scrollToEntity(entityId) {
+        const targetEntity = document.querySelector(`#display-textbox .entity-mark[entity-id="${entityId}"]`);
+        if (targetEntity) {
+            targetEntity.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+    }
 }
