@@ -150,6 +150,9 @@ def render(text: str,
         # Check color_attr_key is in entity attributes
         entities = copy.deepcopy(entities)
         for entity in entities:
+            if entity['attr'] is None:
+                raise ValueError(f'entity["attr"] is None (entity_id: {entity["entity_id"]}).')
+
             if color_attr_key not in entity['attr']:
                 raise ValueError(f'color_attr_key "{color_attr_key}" not found in an entity (entity_id: {entity["entity_id"]}).')
         
