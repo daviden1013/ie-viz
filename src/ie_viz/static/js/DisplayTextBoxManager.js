@@ -8,16 +8,15 @@ class DisplayTextBoxManager {
     updateEntities(text, entities, currentTheme) {
         // Clear current display textbox
         var textElement = document.getElementById("display-textbox");
-        textElement.innerHTML = '';
+        textElement.style.whiteSpace = 'pre-wrap';
+        
+        // Fragment to avoid DOM modification
+        const mainFragment = document.createDocumentFragment();
     
         // If no entities
         if (!entities || entities.length === 0) {
-            text.split('\n').forEach((line, index, array) => {
-                textElement.appendChild(document.createTextNode(line));
-                if (index < array.length - 1) {
-                    textElement.appendChild(document.createElement("br"));
-                }
-            });
+            mainFragment.appendChild(document.createTextNode(text))
+            textElement.replaceChildren(mainFragment);
             return null;
         }
     
@@ -28,16 +27,11 @@ class DisplayTextBoxManager {
         });
     
         // Sort entities by start index. If start index is the same, sort by length (longer first)
-        entities.sort((a, b) => {
-            if (a.start !== b.start) {
-                return a.start - b.start;
-            }
-            return b.end - a.end;
-        });
+        entities.sort((a, b) => (a.start !== b.start) ? a.start - b.start : b.end - a.end);
     
         // Process entities with a stack for nesting
         let currentPosition = 0;
-        let currentContainer = textElement;
+        let currentContainer = mainFragment;
         let entityStack = []; // Stack to track open entity marks
     
         for (let i = 0; i < entities.length; i++) {
@@ -50,28 +44,18 @@ class DisplayTextBoxManager {
                 // Add remaining text before closing
                 if (currentPosition < finishedEntity.end) {
                     const remainingText = text.substring(currentPosition, finishedEntity.end);
-                    remainingText.split('\n').forEach((line, index, array) => {
-                        currentContainer.appendChild(document.createTextNode(line));
-                        if (index < array.length - 1) {
-                            currentContainer.appendChild(document.createElement("br"));
-                        }
-                    });
+                    currentContainer.appendChild(document.createTextNode(remainingText))
                 }
                 
                 // Move up one level in the container hierarchy
-                currentContainer = currentContainer.parentElement || textElement;
+                currentContainer = currentContainer.parentElement || mainFragment;
                 currentPosition = finishedEntity.end;
             }
     
             // Add text before the current entity
             if (currentPosition < entity.start) {
                 const preText = text.substring(currentPosition, entity.start);
-                preText.split('\n').forEach((line, index, array) => {
-                    currentContainer.appendChild(document.createTextNode(line));
-                    if (index < array.length - 1) {
-                        currentContainer.appendChild(document.createElement("br"));
-                    }
-                });
+                currentContainer.appendChild(document.createTextNode(preText))
             }
     
             // Create entity mark element
@@ -120,29 +104,17 @@ class DisplayTextBoxManager {
             // Add remaining text before closing
             if (currentPosition < finishedEntity.end) {
                 const remainingText = text.substring(currentPosition, finishedEntity.end);
-                remainingText.split('\n').forEach((line, index, array) => {
-                    currentContainer.appendChild(document.createTextNode(line));
-                    if (index < array.length - 1) {
-                        currentContainer.appendChild(document.createElement("br"));
-                    }
-                });
+                currentContainer.appendChild(document.createTextNode(remainingText))
             }
             
             // Move up one level in the container hierarchy
-            currentContainer = currentContainer.parentElement || textElement;
+            currentContainer = currentContainer.parentElement || mainFragment;
             currentPosition = finishedEntity.end;
         }
     
         // Add remaining text after all entities
-        if (currentPosition < text.length) {
-            const remainingText = text.substring(currentPosition);
-            remainingText.split('\n').forEach((line, index, array) => {
-                currentContainer.appendChild(document.createTextNode(line));
-                if (index < array.length - 1) {
-                    currentContainer.appendChild(document.createElement("br"));
-                }
-            });
-        }
+        currentContainer.appendChild(document.createTextNode(text.substring(currentPosition)))
+        textElement.replaceChildren(mainFragment);
     }
 
     
