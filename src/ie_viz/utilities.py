@@ -1,6 +1,6 @@
 import os
 import json
-from typing import List, Dict, Iterable, Callable
+from typing import List, Dict, Iterable, Callable, Any
 from flask import Flask, render_template_string, url_for
 from flask_socketio import SocketIO, emit
 import re
@@ -48,13 +48,14 @@ def get_attr_color_map(unique_attr:List, theme_colors:List[str]) -> Dict[str, st
     
 
 def render(text: str,
-          entities: List[Dict[str, str]],
-          relations: List[Dict[str, str]]=None,
-          theme:str = "light",
-          color_attr_key:str=None,
-          color_map_func:Callable=None,
-          title:str="Named Entity Visualization"
-          ):
+           struct: Dict[str, Any]=None,
+           entities: List[Dict[str, str]]=None,
+           relations: List[Dict[str, str]]=None,
+           theme:str = "light",
+           color_attr_key:str=None,
+           color_map_func:Callable=None,
+           title:str="Named Entity Visualization"
+            ) -> str:
     """
     This function serves the information extracton visualization App.
 
@@ -62,7 +63,9 @@ def render(text: str,
     -----------
     text : str
         The text content to be displayed.
-    entities : List[Dict[str, str]]
+    struct : Dict[str, Any], Optional
+        The unanchored structure information to be displayed.
+    entities : List[Dict[str, Any]], Optional
         The list of entities to be displayed. Must be a list of dictionaries with the following keys:
             - entity_id: str
             - start: int
@@ -88,14 +91,20 @@ def render(text: str,
     if not isinstance(text, str):
         raise TypeError("text must be a string.")
     
+    # Check struct type is Dict[str, Any]
+    if struct:
+        if not isinstance(struct, Dict):
+            raise TypeError("struct must be a dictionary.")
+
     # Check entities type is List[Dict[str, str]]
-    if not isinstance(entities, Iterable):
-        raise TypeError("entities must be a List or Iterable.")
-    for entity in entities:
-        if not isinstance(entity, Dict):
-            raise TypeError("entities must be a list of dictionaries.")
-        if not all(key in entity for key in ['entity_id', 'start', 'end']):
-            raise ValueError("entity dictionary must have the keys 'entity_id', 'start', 'end'.")
+    if entities:
+        if not isinstance(entities, Iterable):
+            raise TypeError("entities must be a List or Iterable.")
+        for entity in entities:
+            if not isinstance(entity, Dict):
+                raise TypeError("entities must be a list of dictionaries.")
+            if not all(key in entity for key in ['entity_id', 'start', 'end']):
+                raise ValueError("entity dictionary must have the keys 'entity_id', 'start', 'end'.")
         
     # Check entity_id is unique
     entity_ids = [entity['entity_id'] for entity in entities]
@@ -189,11 +198,14 @@ def render(text: str,
     # Package data into JSON
     data = {
         'text': text,
-        'entities': entities,
         'theme': theme,
         'light_theme_colors': load_theme_colors("light"),
         'dark_theme_colors': load_theme_colors("dark")
     }
+    if struct:
+        data['struct'] = struct
+    if entities:
+        data['entities'] = entities
     if relations:
         data['relations'] = relations
 
@@ -228,7 +240,8 @@ def render(text: str,
 
 
 def serve(text: str,
-          entities: List[Dict[str, str]],
+          struct: Dict[str, Any]=None,
+          entities: List[Dict[str, str]]=None,
           relations: List[Dict[str, str]]=None,
           theme:str = "light",
           color_attr_key:str=None,
@@ -244,7 +257,9 @@ def serve(text: str,
     -----------
     text : str
         The text content to be displayed.
-    entities : List[Dict[str, str]]
+    struct : Dict[str, Any], Optional
+        The unanchored structure information to be displayed.
+    entities : List[Dict[str, str]] Optional
         The list of entities to be displayed. Must be a list of dictionaries with the following keys:
             - entity_id: str
             - start: int
